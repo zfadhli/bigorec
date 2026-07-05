@@ -100,7 +100,8 @@ const recordCmd = defineCommand({
   },
   async run({ args }) {
     const pollInterval = parseInt(args.pollInterval, 10);
-    console.log(`${tag.info} Polling every ${pollInterval}s`);
+    const offlineInterval = 3 * 60; // matches recorder's offline interval
+    console.log(`${tag.info} Polling every ${offlineInterval / 60}min (offline) / ${pollInterval}s (live)`);
 
     const recorder = new Recorder(args.url, {
       output: args.output,
@@ -143,7 +144,7 @@ const recordCmd = defineCommand({
     });
     recorder.on('offline', () => {
       stopCountdown();
-      startCountdown(pollInterval);
+      startCountdown(offlineInterval);
     });
     recorder.on('recording', (path) => {
       stopCountdown();
