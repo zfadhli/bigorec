@@ -2,6 +2,7 @@ import { EventEmitter } from 'node:events';
 import { join } from 'node:path';
 import { getStreamInfo, parseSiteId } from './api.js';
 import { downloadLiveHls } from './hls.js';
+import { StreamNotFoundError } from './errors.js';
 import type { RecordOptions, StreamInfo } from './types.js';
 
 export class Recorder extends EventEmitter {
@@ -119,7 +120,7 @@ export async function recordOnce(input: string, options: RecordOptions = {}): Pr
   const info = await getStreamInfo(siteId);
 
   if (!info.alive || !info.hlsSrc) {
-    throw new Error(`Stream is not live (siteId: ${siteId})`);
+    throw new StreamNotFoundError(siteId);
   }
 
   const filename = options.output || defaultFilename(siteId);

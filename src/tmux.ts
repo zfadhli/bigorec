@@ -1,4 +1,5 @@
 import { execSync } from 'node:child_process'
+import { TmuxError } from './errors.js'
 
 function sessionName(siteId: string): string {
   return `bigorec-${siteId}`
@@ -16,7 +17,7 @@ function hasSession(name: string): boolean {
 export function tmuxStart(siteId: string, command: string): void {
   const name = sessionName(siteId)
   if (hasSession(name)) {
-    throw new Error(`Session "${name}" already exists. Run "bigorec stop ${siteId}" first.`)
+    throw new TmuxError(`Session "${name}" already exists. Run "bigorec stop ${siteId}" first.`)
   }
   execSync(`tmux new-session -d -s ${name} "${command}"`)
 }
@@ -25,7 +26,7 @@ export function tmuxStop(siteId?: string): void {
   if (siteId) {
     const name = sessionName(siteId)
     if (!hasSession(name)) {
-      throw new Error(`No session "${name}" found.`)
+      throw new TmuxError(`No session "${name}" found.`)
     }
     gracefulStop(name)
     return
@@ -36,7 +37,7 @@ export function tmuxStop(siteId?: string): void {
     const output = execSync('tmux list-sessions -F "#{session_name}"', { encoding: 'utf-8' })
     const sessions = output.split('\n').filter((s) => s.startsWith('bigorec-'))
     if (sessions.length === 0) {
-      throw new Error('No active bigorec sessions found.')
+      throw new TmuxError('No active bigorec sessions found.')
     }
     for (const s of sessions) {
       gracefulStop(s)

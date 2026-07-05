@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import type { DownloadOptions } from './types.js';
+import { HlsError } from './errors.js';
 
 interface M3u8Segment {
   uri: string;
@@ -37,7 +38,7 @@ async function fetchM3u8(url: string, timeout: number): Promise<string> {
       signal: controller.signal,
       headers: { 'User-Agent': 'Mozilla/5.0' },
     });
-    if (!res.ok) throw new Error(`Failed to fetch m3u8: ${res.status}`);
+    if (!res.ok) throw new HlsError(`Failed to fetch m3u8: ${res.status}`);
     return await res.text();
   } finally {
     clearTimeout(timer);
@@ -54,7 +55,7 @@ async function downloadSegment(url: string, timeout: number): Promise<Buffer> {
       signal: controller.signal,
       headers: { 'User-Agent': 'Mozilla/5.0' },
     });
-    if (!res.ok) throw new Error(`Segment download failed: ${res.status}`);
+    if (!res.ok) throw new HlsError(`Segment download failed: ${res.status}`);
     const arrayBuffer = await res.arrayBuffer();
     return Buffer.from(arrayBuffer);
   } finally {
@@ -94,7 +95,7 @@ export async function downloadHls(m3u8Url: string, options: DownloadOptions = {}
   const segments = parseM3u8(content, m3u8Url);
 
   if (segments.length === 0) {
-    throw new Error('No segments found in m3u8 playlist');
+    throw new HlsError('No segments found in m3u8 playlist');
   }
 
   // Download all segments

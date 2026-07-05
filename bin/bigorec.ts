@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { statSync } from 'node:fs';
 import { defineCommand, runMain } from 'citty';
-import { downloadHls, getStreamInfo, parseSiteId, Recorder } from '../src/index.js';
+import { downloadHls, getStreamInfo, parseSiteId, Recorder, BigorecError } from '../src/index.js';
 import { tmuxStart, tmuxStop, tmuxStatus } from '../src/tmux.js';
 
 // Tokrec-style colored tags
@@ -169,8 +169,9 @@ const recordCmd = defineCommand({
       await recorder.start();
     } catch (error) {
       stopCountdown();
-      console.log(`${tag.err} ${error instanceof Error ? error.message : error}`);
-      process.exit(1);
+      const msg = error instanceof Error ? error.message : String(error);
+      console.log(`${tag.err} ${msg}`);
+      process.exit(error instanceof BigorecError ? 1 : 2);
     }
   },
 });
@@ -193,8 +194,9 @@ const startCmd = defineCommand({
       console.log(`  tmux attach -t bigorec-${siteId}   — view live output`);
       console.log(`  bigorec stop ${siteId}             — stop recording`);
     } catch (err) {
-      console.log(`${tag.err} ${err instanceof Error ? err.message : err}`);
-      process.exit(1);
+      const msg = err instanceof Error ? err.message : String(err);
+      console.log(`${tag.err} ${msg}`);
+      process.exit(err instanceof BigorecError ? 1 : 2);
     }
   },
 });
@@ -214,8 +216,9 @@ const stopCmd = defineCommand({
         console.log(`${tag.ok} All bigorec sessions stopped`);
       }
     } catch (err) {
-      console.log(`${tag.err} ${err instanceof Error ? err.message : err}`);
-      process.exit(1);
+      const msg = err instanceof Error ? err.message : String(err);
+      console.log(`${tag.err} ${msg}`);
+      process.exit(err instanceof BigorecError ? 1 : 2);
     }
   },
 });

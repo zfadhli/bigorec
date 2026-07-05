@@ -1,4 +1,5 @@
 import type { StreamInfo } from './types.js';
+import { ApiError, UserNotFoundError } from './errors.js';
 
 const API_URL = 'https://ta.bigo.tv/official_website/studio/getInternalStudioInfo';
 
@@ -22,7 +23,7 @@ export async function getStreamInfo(siteId: string): Promise<StreamInfo> {
       signal: controller.signal,
     });
 
-    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    if (!res.ok) throw new ApiError(`HTTP ${res.status}`);
 
     const json = (await res.json()) as {
       code: number;
@@ -41,8 +42,8 @@ export async function getStreamInfo(siteId: string): Promise<StreamInfo> {
       };
     };
 
-    if (json.code !== 0) throw new Error(`API error: ${json.msg}`);
-    if (!json.data?.clientBigoId) throw new Error(`Unknown user: ${siteId}`);
+    if (json.code !== 0) throw new ApiError(json.msg);
+    if (!json.data?.clientBigoId) throw new UserNotFoundError(siteId);
 
     return {
       siteId: json.data.clientBigoId,
