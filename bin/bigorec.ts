@@ -99,32 +99,66 @@ const recordCmd = defineCommand({
     },
   },
   async run({ args }) {
-    console.log(`${tag.info} Polling every ${args.pollInterval}s`);
+    const pollInterval = parseInt(args.pollInterval, 10);
+    console.log(`${tag.info} Polling every ${pollInterval}s`);
 
     const recorder = new Recorder(args.url, {
       output: args.output,
       outputDir: args.outputDir,
-      pollInterval: parseInt(args.pollInterval, 10),
+      pollInterval,
       maxDuration: parseInt(args.maxDuration, 10),
     });
 
+    let countdownTimer: ReturnType<typeof setInterval> | undefined;
+
+    function startCountdown(seconds: number) {
+      let remaining = seconds;
+      const tick = () => {
+        const m = Math.floor(remaining / 60);
+        const s = remaining % 60;
+        const time = m > 0 ? `${m}m ${s}s` : `${s}s`;
+        process.stdout.write(`\r${tag.off} Offline — checking in ${time}  `);
+        remaining--;
+        if (remaining < 0) {
+          clearInterval(countdownTimer);
+          process.stdout.write('\r' + ' '.repeat(60) + '\r');
+          process.stdout.write(`${tag.info} Checking...\r`);
+        }
+      };
+      tick();
+      countdownTimer = setInterval(tick, 1000);
+    }
+
+    function stopCountdown() {
+      if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = undefined;
+      }
+      process.stdout.write('\r' + ' '.repeat(60) + '\r');
+    }
+
     recorder.on('live', (info) => {
+      stopCountdown();
       console.log(`${tag.live} @${info.nickName} (${info.siteId})`);
     });
     recorder.on('offline', () => {
-      console.log(`\n${tag.off} Stream ended`);
+      stopCountdown();
+      startCountdown(pollInterval);
     });
     recorder.on('recording', (path) => {
+      stopCountdown();
       console.log(`${tag.info} Recording to ${path}`);
     });
     recorder.on('progress', (segments) => {
       process.stdout.write(`\r${tag.info} Segments: ${segments}`);
     });
     recorder.on('error', (err) => {
+      stopCountdown();
       console.log(`\n${tag.err} ${err.message}`);
     });
 
     process.on('SIGINT', () => {
+      stopCountdown();
       console.log(`\n${tag.info} Shutting down...`);
       recorder.stop();
     });
@@ -132,6 +166,7 @@ const recordCmd = defineCommand({
     try {
       await recorder.start();
     } catch (error) {
+      stopCountdown();
       console.log(`${tag.err} ${error instanceof Error ? error.message : error}`);
       process.exit(1);
     }

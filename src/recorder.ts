@@ -42,6 +42,8 @@ export class Recorder extends EventEmitter {
           this.emit('live', info);
           await this.record(info);
           this.emit('offline');
+        } else {
+          this.emit('offline');
         }
       } catch (error) {
         if (!this.polling) break;
