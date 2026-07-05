@@ -37,17 +37,18 @@ export async function getStreamInfo(siteId: string): Promise<StreamInfo> {
         hls_src: string | null;
         snapshot: string | null;
         roomId: string;
+        clientBigoId: string;
       };
     };
 
     if (json.code !== 0) throw new Error(`API error: ${json.msg}`);
-    if (!json.data?.siteId) throw new Error(`Unknown user: ${siteId}`);
+    if (!json.data?.clientBigoId) throw new Error(`Unknown user: ${siteId}`);
 
     return {
-      siteId: json.data.siteId,
+      siteId: json.data.clientBigoId,
       uid: json.data.uid,
       sid: json.data.sid,
-      nickName: json.data.nick_name,
+      nickName: json.data.nick_name || json.data.clientBigoId,
       roomTopic: json.data.roomTopic,
       alive: json.data.alive === 1,
       hlsSrc: json.data.hls_src,
