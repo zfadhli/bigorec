@@ -1,12 +1,12 @@
-import type { StreamInfo } from './types.js'
+import type { StreamInfo } from "./types.js"
 
-const API_URL = 'https://ta.bigo.tv/official_website/studio/getInternalStudioInfo'
+const API_URL = "https://ta.bigo.tv/official_website/studio/getInternalStudioInfo"
 
 /** Extract siteId from a Bigo URL or raw ID */
 export function parseSiteId(input: string): string {
   // https://www.bigo.tv/805516745 or bigo.tv/805516745 or just 805516745
-  const match = input.match(/bigo\.tv(?:\/[a-z]{2,})?\/([^/?#]+)/i)
-  return match ? match[1] : input.trim()
+  const match = input.match(/bigo\.tv(?:\/[a-z]{2,})?\/(?<id>[^/?#]+)/i)
+  return match?.groups?.id ?? input.trim()
 }
 
 /** Fetch stream info for a siteId */
@@ -16,15 +16,15 @@ export async function getStreamInfo(siteId: string): Promise<StreamInfo> {
 
   try {
     const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Accept': 'application/json' },
-      body: new URLSearchParams({ siteId, verify: '' }),
+      method: "POST",
+      headers: { Accept: "application/json" },
+      body: new URLSearchParams({ siteId, verify: "" }),
       signal: controller.signal,
     })
 
     if (!res.ok) throw new Error(`API error: ${res.status}`)
 
-    const json = await res.json() as {
+    const json = (await res.json()) as {
       code: number
       msg: string
       data: {

@@ -2,25 +2,29 @@
   "name": "bigorec",
   "version": "0.1.0",
   "description": "Download and record Bigo Live streams",
-  "type": "module",
-  "main": "./dist/index.mjs",
-  "types": "./dist/index.d.mts",
+  "license": "MIT",
   "bin": {
     "bigorec": "./dist/bin/bigorec.mjs"
   },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
       "types": "./dist/index.d.mts"
     }
   },
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint src/ bin/",
+    "format": "oxfmt --write src/ bin/",
+    "format:check": "oxfmt --check src/ bin/"
   },
   "dependencies": {
     "citty": "^0.1.6",
@@ -28,11 +32,13 @@
   },
   "devDependencies": {
     "@types/node": "^26.1.0",
+    "lefthook": "^2.1.9",
+    "oxfmt": "^0.57.0",
+    "oxlint": "^1.72.0",
     "tsdown": "^0.22.3",
     "typescript": "^5.4.0"
   },
   "engines": {
     "node": ">=18"
-  },
-  "license": "MIT"
+  }
 }

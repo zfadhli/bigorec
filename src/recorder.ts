@@ -1,8 +1,8 @@
-import { EventEmitter } from 'node:events'
-import { join } from 'node:path'
-import { getStreamInfo, parseSiteId } from './api.js'
-import { downloadLiveHls } from './hls.js'
-import type { RecordOptions, StreamInfo } from './types.js'
+import type { RecordOptions, StreamInfo } from "./types.js"
+import { EventEmitter } from "node:events"
+import { join } from "node:path"
+import { getStreamInfo, parseSiteId } from "./api.js"
+import { downloadLiveHls } from "./hls.js"
 
 export class Recorder extends EventEmitter {
   private siteId: string
@@ -17,9 +17,9 @@ export class Recorder extends EventEmitter {
     this.options = {
       pollInterval: options.pollInterval ?? 30,
       maxDuration: options.maxDuration ?? 0,
-      outputDir: options.outputDir ?? './recordings',
+      outputDir: options.outputDir ?? "./recordings",
       splitEvery: options.splitEvery ?? 0,
-      output: options.output ?? '',
+      output: options.output ?? "",
       concurrency: options.concurrency ?? 4,
       timeout: options.timeout ?? 30_000,
     }
@@ -39,13 +39,13 @@ export class Recorder extends EventEmitter {
         const info = await getStreamInfo(this.siteId)
 
         if (info.alive && info.hlsSrc) {
-          this.emit('live', info)
+          this.emit("live", info)
           await this.record(info)
-          this.emit('offline')
+          this.emit("offline")
         }
-      } catch (err) {
+      } catch (error) {
         if (!this.polling) break
-        this.emit('error', err instanceof Error ? err : new Error(String(err)))
+        this.emit("error", error instanceof Error ? error : new Error(String(error)))
       }
 
       if (this.polling) {
@@ -66,7 +66,7 @@ export class Recorder extends EventEmitter {
     const filename = this.options.output || defaultFilename(info.siteId)
     const outputPath = join(this.options.outputDir, filename)
 
-    this.emit('recording', outputPath)
+    this.emit("recording", outputPath)
     this.abortController = new AbortController()
 
     let durationTimer: ReturnType<typeof setTimeout> | undefined
@@ -83,11 +83,11 @@ export class Recorder extends EventEmitter {
         concurrency: this.options.concurrency,
         timeout: this.options.timeout,
         signal: this.abortController.signal,
-        onSegment: (count) => this.emit('progress', count),
+        onSegment: (count) => this.emit("progress", count),
       })
-    } catch (err) {
+    } catch (error) {
       if (this.abortController.signal.aborted) return
-      this.emit('error', err instanceof Error ? err : new Error(String(err)))
+      this.emit("error", error instanceof Error ? error : new Error(String(error)))
     } finally {
       if (durationTimer) clearTimeout(durationTimer)
       this.abortController = null
@@ -100,18 +100,19 @@ function interruptibleSleep(ms: number, signal: AbortSignal): Promise<void> {
   if (signal.aborted) return Promise.resolve()
   return new Promise((resolve) => {
     const timer = setTimeout(resolve, ms)
-    signal.addEventListener('abort', () => {
-      clearTimeout(timer)
-      resolve()
-    }, { once: true })
+    signal.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(timer)
+        resolve()
+      },
+      { once: true },
+    )
   })
 }
 
 /** Convenience: one-shot record of current live stream */
-export async function recordOnce(
-  input: string,
-  options: RecordOptions = {},
-): Promise<string> {
+export async function recordOnce(input: string, options: RecordOptions = {}): Promise<string> {
   const siteId = parseSiteId(input)
   const info = await getStreamInfo(siteId)
 
@@ -120,7 +121,7 @@ export async function recordOnce(
   }
 
   const filename = options.output || defaultFilename(siteId)
-  const outputPath = join(options.outputDir ?? './recordings', filename)
+  const outputPath = join(options.outputDir ?? "./recordings", filename)
 
   await downloadLiveHls(info.hlsSrc, outputPath, {
     concurrency: options.concurrency ?? 4,
@@ -132,7 +133,7 @@ export async function recordOnce(
 
 function defaultFilename(siteId: string): string {
   const d = new Date()
-  const pad = (n: number) => String(n).padStart(2, '0')
+  const pad = (n: number) => String(n).padStart(2, "0")
   const date = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`
   const time = `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`
   return `${siteId}=${date}_${time}.ts`

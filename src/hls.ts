@@ -1,6 +1,6 @@
-import { writeFile, mkdir } from 'node:fs/promises'
-import { dirname } from 'node:path'
-import type { DownloadOptions } from './types.js'
+import { mkdir, writeFile } from "node:fs/promises"
+import { dirname } from "node:path"
+import type { DownloadOptions } from "./types.js"
 
 interface M3u8Segment {
   uri: string
@@ -9,16 +9,16 @@ interface M3u8Segment {
 
 /** Parse a basic m3u8 playlist (handles #EXTINF lines + URIs) */
 function parseM3u8(content: string, baseUrl: string): M3u8Segment[] {
-  const lines = content.split('\n').map(l => l.trim())
+  const lines = content.split("\n").map((l) => l.trim())
   const segments: M3u8Segment[] = []
 
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].startsWith('#EXTINF:')) {
-      const duration = parseFloat(lines[i].split(':')[1]) || 0
+    if (lines[i].startsWith("#EXTINF:")) {
+      const duration = parseFloat(lines[i].split(":")[1]) || 0
       const uri = lines[i + 1]
-      if (uri && !uri.startsWith('#')) {
+      if (uri && !uri.startsWith("#")) {
         // Resolve relative URLs
-        const fullUrl = uri.startsWith('http') ? uri : new URL(uri, baseUrl).href
+        const fullUrl = uri.startsWith("http") ? uri : new URL(uri, baseUrl).href
         segments.push({ uri: fullUrl, duration })
       }
     }
@@ -35,7 +35,7 @@ async function fetchM3u8(url: string, timeout: number): Promise<string> {
   try {
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: { 'User-Agent': 'Mozilla/5.0' },
+      headers: { "User-Agent": "Mozilla/5.0" },
     })
     if (!res.ok) throw new Error(`Failed to fetch m3u8: ${res.status}`)
     return await res.text()
@@ -45,17 +45,14 @@ async function fetchM3u8(url: string, timeout: number): Promise<string> {
 }
 
 /** Download a single segment */
-async function downloadSegment(
-  url: string,
-  timeout: number,
-): Promise<Buffer> {
+async function downloadSegment(url: string, timeout: number): Promise<Buffer> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeout)
 
   try {
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: { 'User-Agent': 'Mozilla/5.0' },
+      headers: { "User-Agent": "Mozilla/5.0" },
     })
     if (!res.ok) throw new Error(`Segment download failed: ${res.status}`)
     const arrayBuffer = await res.arrayBuffer()
@@ -89,26 +86,16 @@ async function downloadSegments(
 }
 
 /** Download an HLS stream and save to file */
-export async function downloadHls(
-  m3u8Url: string,
-  options: DownloadOptions = {},
-): Promise<string> {
-  const {
-    output,
-    concurrency = 4,
-    timeout = 30_000,
-  } = options
+export async function downloadHls(m3u8Url: string, options: DownloadOptions = {}): Promise<string> {
+  const { output, concurrency = 4, timeout = 30_000 } = options
 
   // Fetch playlist
   const content = await fetchM3u8(m3u8Url, timeout)
   const segments = parseM3u8(content, m3u8Url)
 
   if (segments.length === 0) {
-    throw new Error('No segments found in m3u8 playlist')
+    throw new Error("No segments found in m3u8 playlist")
   }
-
-  // Calculate total duration
-  const totalDuration = segments.reduce((sum, s) => sum + s.duration, 0)
 
   // Download all segments
   const buffers = await downloadSegments(segments, concurrency, timeout)
@@ -135,15 +122,10 @@ export async function downloadLiveHls(
     signal?: AbortSignal
   } = {},
 ): Promise<void> {
-  const {
-    concurrency = 4,
-    timeout = 30_000,
-    onSegment,
-    signal,
-  } = options
+  const { concurrency = 4, timeout = 30_000, onSegment, signal } = options
 
   await mkdir(dirname(outputPath), { recursive: true })
-  const { createWriteStream } = await import('node:fs')
+  const { createWriteStream } = await import("node:fs")
   const stream = createWriteStream(outputPath)
 
   let segmentCount = 0
@@ -155,7 +137,7 @@ export async function downloadLiveHls(
       const segments = parseM3u8(content, m3u8Url)
 
       // Only download new segments
-      const newSegments = segments.filter(s => !seen.has(s.uri))
+      const newSegments = segments.filter((s) => !seen.has(s.uri))
       if (newSegments.length === 0) {
         // Wait before retrying playlist fetch
         await sleep(1000)
@@ -169,7 +151,7 @@ export async function downloadLiveHls(
         onSegment?.(segmentCount)
       }
 
-      newSegments.forEach(s => seen.add(s.uri))
+      newSegments.forEach((s) => seen.add(s.uri))
 
       // Brief pause before next playlist fetch
       await sleep(500)
@@ -180,5 +162,5 @@ export async function downloadLiveHls(
 }
 
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }

@@ -1,0 +1,11 @@
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      glob: "*.{ts,js,mjs,cjs}"
+      run: npx oxlint {staged_files}
+      stage_fixed: true
+    format:
+      glob: "*.{ts,js,mjs,cjs,json,md}"
+      run: npx oxfmt --write {staged_files}
+      stage_fixed: true

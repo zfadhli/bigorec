@@ -1,4 +1,4 @@
-// ponytail: types are minimal, add as needed
+// Ponytail: types are minimal, add as needed
 export interface StreamInfo {
   siteId: string
   uid: string
