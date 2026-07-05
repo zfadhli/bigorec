@@ -2,6 +2,7 @@
 import { statSync } from 'node:fs';
 import { defineCommand, runMain } from 'citty';
 import { downloadHls, getStreamInfo, parseSiteId, Recorder } from '../src/index.js';
+import { tmuxStart, tmuxStop, tmuxStatus } from '../src/tmux.js';
 
 // Tokrec-style colored tags
 const tag = {
@@ -174,9 +175,73 @@ const recordCmd = defineCommand({
   },
 });
 
+const startCmd = defineCommand({
+  meta: { name: 'start', description: 'Start recording in a tmux session (survives terminal close)' },
+  args: {
+    url: { type: 'positional', description: 'Bigo room URL or siteId', required: true },
+    output: { type: 'string', description: 'Output file path', alias: 'o' },
+    outputDir: { type: 'string', description: 'Output directory', alias: 'd', default: './recordings' },
+    pollInterval: { type: 'string', description: 'Poll interval when live (seconds)', alias: 'p', default: '30' },
+    maxDuration: { type: 'string', description: 'Max duration (seconds, 0=unlimited)', alias: 'm', default: '0' },
+  },
+  run({ args }) {
+    const siteId = parseSiteId(args.url);
+    const cmd = `bigorec record ${args.url} -d ${args.outputDir} -p ${args.pollInterval} -m ${args.maxDuration}`;
+    try {
+      tmuxStart(siteId, cmd);
+      console.log(`${tag.ok} Session "bigorec-${siteId}" started in background`);
+      console.log(`  tmux attach -t bigorec-${siteId}   — view live output`);
+      console.log(`  bigorec stop ${siteId}             — stop recording`);
+    } catch (err) {
+      console.log(`${tag.err} ${err instanceof Error ? err.message : err}`);
+      process.exit(1);
+    }
+  },
+});
+
+const stopCmd = defineCommand({
+  meta: { name: 'stop', description: 'Stop background tmux session(s)' },
+  args: {
+    siteId: { type: 'string', description: 'Site ID (omit to stop all)', alias: 'u' },
+  },
+  run({ args }) {
+    const siteId = args.siteId || undefined;
+    try {
+      tmuxStop(siteId);
+      if (siteId) {
+        console.log(`${tag.ok} Session "bigorec-${siteId}" stopped`);
+      } else {
+        console.log(`${tag.ok} All bigorec sessions stopped`);
+      }
+    } catch (err) {
+      console.log(`${tag.err} ${err instanceof Error ? err.message : err}`);
+      process.exit(1);
+    }
+  },
+});
+
+const statusCmd = defineCommand({
+  meta: { name: 'status', description: 'Check tmux session(s)' },
+  args: {
+    siteId: { type: 'string', description: 'Site ID (omit to show all)', alias: 'u' },
+  },
+  run({ args }) {
+    const siteId = args.siteId || undefined;
+    const sessions = tmuxStatus(siteId);
+    if (sessions.length === 0) {
+      console.log(`${tag.info} No active sessions`);
+      return;
+    }
+    for (const s of sessions) {
+      console.log(`${tag.live} bigorec-${s.siteId}`);
+      console.log(`  tmux attach -t ${s.session}   — view live output`);
+    }
+  },
+});
+
 const main = defineCommand({
   meta: { name: 'bigorec', description: 'Download and record Bigo Live streams' },
-  subCommands: { info: infoCmd, download: downloadCmd, record: recordCmd },
+  subCommands: { info: infoCmd, download: downloadCmd, record: recordCmd, start: startCmd, stop: stopCmd, status: statusCmd },
 });
 
 runMain(main);
