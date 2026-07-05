@@ -3,23 +3,23 @@
   "version": "0.1.0",
   "description": "Download and record Bigo Live streams",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "bin": {
-    "bigorec": "./dist/bin/bigorec.js"
+    "bigorec": "./dist/bin/bigorec.mjs"
   },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@types/node": "^26.1.0",
-    "tsup": "^8.0.0",
+    "tsdown": "^0.22.3",
     "typescript": "^5.4.0"
   },
   "engines": {

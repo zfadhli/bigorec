@@ -1,4 +1,4 @@
-import { defineConfig } from 'tsup'
+import { defineConfig } from 'tsdown'
 
 export default defineConfig([
   {
@@ -10,6 +10,6 @@ export default defineConfig([
   {
     entry: { 'bin/bigorec': 'bin/bigorec.ts' },
     format: 'esm',
-    noExternal: [],
+    platform: 'node',
   },
 ])
