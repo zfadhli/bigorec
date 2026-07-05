@@ -1,146 +1,146 @@
 #!/usr/bin/env node
-import { defineCommand, runMain } from "citty"
-import { statSync } from "node:fs"
-import { downloadHls, getStreamInfo, parseSiteId, Recorder } from "../src/index.js"
+import { statSync } from 'node:fs';
+import { defineCommand, runMain } from 'citty';
+import { downloadHls, getStreamInfo, parseSiteId, Recorder } from '../src/index.js';
 
 // Tokrec-style colored tags
 const tag = {
-  info: "\x1b[1;34m[INFO]\x1b[0m ",
-  live: "\x1b[1;32m[LIVE]\x1b[0m ",
-  off: "\x1b[1;34m[OFF]\x1b[0m ",
-  ok: "\x1b[1;32m[OK]\x1b[0m ",
-  done: "\x1b[1;32m[DONE]\x1b[0m ",
-  warn: "\x1b[1;33m[WARN]\x1b[0m ",
-  err: "\x1b[1;31m[ERR]\x1b[0m ",
-}
+  info: '\x1b[1;34m[INFO]\x1b[0m ',
+  live: '\x1b[1;32m[LIVE]\x1b[0m ',
+  off: '\x1b[1;34m[OFF]\x1b[0m ',
+  ok: '\x1b[1;32m[OK]\x1b[0m ',
+  done: '\x1b[1;32m[DONE]\x1b[0m ',
+  warn: '\x1b[1;33m[WARN]\x1b[0m ',
+  err: '\x1b[1;31m[ERR]\x1b[0m ',
+};
 
 function humanSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KB`
-  if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} MB`
-  return `${(bytes / 1024 ** 3).toFixed(1)} GB`
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
+  return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
 }
 
 function humanDuration(seconds: number): string {
-  const m = Math.floor(seconds / 60)
-  const s = Math.floor(seconds % 60)
-  return m > 0 ? `${m}m ${s}s` : `${s}s`
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
 const infoCmd = defineCommand({
-  meta: { name: "info", description: "Get stream info for a Bigo room" },
+  meta: { name: 'info', description: 'Get stream info for a Bigo room' },
   args: {
-    url: { type: "positional", description: "Bigo room URL or siteId", required: true },
+    url: { type: 'positional', description: 'Bigo room URL or siteId', required: true },
   },
   async run({ args }) {
-    const siteId = parseSiteId(args.url)
-    const stream = await getStreamInfo(siteId)
+    const siteId = parseSiteId(args.url);
+    const stream = await getStreamInfo(siteId);
 
     if (stream.alive && stream.hlsSrc) {
-      console.log(`${tag.live} @${stream.nickName} (${stream.siteId})`)
-      if (stream.roomTopic) console.log(`  ${stream.roomTopic}`)
-      console.log(`  ${stream.hlsSrc}`)
+      console.log(`${tag.live} @${stream.nickName} (${stream.siteId})`);
+      if (stream.roomTopic) console.log(`  ${stream.roomTopic}`);
+      console.log(`  ${stream.hlsSrc}`);
     } else {
-      console.log(`${tag.off} @${stream.nickName} (${stream.siteId}) is offline`)
+      console.log(`${tag.off} @${stream.nickName} (${stream.siteId}) is offline`);
     }
   },
-})
+});
 
 const downloadCmd = defineCommand({
-  meta: { name: "download", description: "Download current live stream" },
+  meta: { name: 'download', description: 'Download current live stream' },
   args: {
-    url: { type: "positional", description: "Bigo room URL or siteId", required: true },
-    output: { type: "string", description: "Output file path", alias: "o" },
-    concurrency: { type: "string", description: "Download concurrency", alias: "c", default: "4" },
+    url: { type: 'positional', description: 'Bigo room URL or siteId', required: true },
+    output: { type: 'string', description: 'Output file path', alias: 'o' },
+    concurrency: { type: 'string', description: 'Download concurrency', alias: 'c', default: '4' },
   },
   async run({ args }) {
-    const siteId = parseSiteId(args.url)
-    const stream = await getStreamInfo(siteId)
+    const siteId = parseSiteId(args.url);
+    const stream = await getStreamInfo(siteId);
 
     if (!stream.alive || !stream.hlsSrc) {
-      console.log(`${tag.err} Stream is not live`)
-      process.exit(1)
+      console.log(`${tag.err} Stream is not live`);
+      process.exit(1);
     }
 
-    console.log(`${tag.live} @${stream.nickName} (${stream.siteId})`)
-    const start = Date.now()
+    console.log(`${tag.live} @${stream.nickName} (${stream.siteId})`);
+    const start = Date.now();
     const outputPath = await downloadHls(stream.hlsSrc, {
       output: args.output,
-      concurrency: parseInt(args.concurrency),
-    })
-    const elapsed = (Date.now() - start) / 1000
-    const { size } = statSync(outputPath)
-    console.log(`${tag.done} ${outputPath} — ${humanSize(size)} in ${humanDuration(elapsed)}`)
+      concurrency: parseInt(args.concurrency, 10),
+    });
+    const elapsed = (Date.now() - start) / 1000;
+    const { size } = statSync(outputPath);
+    console.log(`${tag.done} ${outputPath} — ${humanSize(size)} in ${humanDuration(elapsed)}`);
   },
-})
+});
 
 const recordCmd = defineCommand({
-  meta: { name: "record", description: "Auto-record when stream goes live" },
+  meta: { name: 'record', description: 'Auto-record when stream goes live' },
   args: {
-    url: { type: "positional", description: "Bigo room URL or siteId", required: true },
-    output: { type: "string", description: "Output file path", alias: "o" },
+    url: { type: 'positional', description: 'Bigo room URL or siteId', required: true },
+    output: { type: 'string', description: 'Output file path', alias: 'o' },
     outputDir: {
-      type: "string",
-      description: "Output directory",
-      alias: "d",
-      default: "./recordings",
+      type: 'string',
+      description: 'Output directory',
+      alias: 'd',
+      default: './recordings',
     },
     pollInterval: {
-      type: "string",
-      description: "Poll interval when live (seconds, offline=3min)",
-      alias: "p",
-      default: "30",
+      type: 'string',
+      description: 'Poll interval when live (seconds, offline=3min)',
+      alias: 'p',
+      default: '30',
     },
     maxDuration: {
-      type: "string",
-      description: "Max duration (seconds, 0=unlimited)",
-      alias: "m",
-      default: "0",
+      type: 'string',
+      description: 'Max duration (seconds, 0=unlimited)',
+      alias: 'm',
+      default: '0',
     },
   },
   async run({ args }) {
-    console.log(`${tag.info} Polling every ${args.pollInterval}s`)
+    console.log(`${tag.info} Polling every ${args.pollInterval}s`);
 
     const recorder = new Recorder(args.url, {
       output: args.output,
       outputDir: args.outputDir,
-      pollInterval: parseInt(args.pollInterval),
-      maxDuration: parseInt(args.maxDuration),
-    })
+      pollInterval: parseInt(args.pollInterval, 10),
+      maxDuration: parseInt(args.maxDuration, 10),
+    });
 
-    recorder.on("live", (info) => {
-      console.log(`${tag.live} @${info.nickName} (${info.siteId})`)
-    })
-    recorder.on("offline", () => {
-      console.log(`\n${tag.off} Stream ended`)
-    })
-    recorder.on("recording", (path) => {
-      console.log(`${tag.info} Recording to ${path}`)
-    })
-    recorder.on("progress", (segments) => {
-      process.stdout.write(`\r${tag.info} Segments: ${segments}`)
-    })
-    recorder.on("error", (err) => {
-      console.log(`\n${tag.err} ${err.message}`)
-    })
+    recorder.on('live', (info) => {
+      console.log(`${tag.live} @${info.nickName} (${info.siteId})`);
+    });
+    recorder.on('offline', () => {
+      console.log(`\n${tag.off} Stream ended`);
+    });
+    recorder.on('recording', (path) => {
+      console.log(`${tag.info} Recording to ${path}`);
+    });
+    recorder.on('progress', (segments) => {
+      process.stdout.write(`\r${tag.info} Segments: ${segments}`);
+    });
+    recorder.on('error', (err) => {
+      console.log(`\n${tag.err} ${err.message}`);
+    });
 
-    process.on("SIGINT", () => {
-      console.log(`\n${tag.info} Shutting down...`)
-      recorder.stop()
-    })
+    process.on('SIGINT', () => {
+      console.log(`\n${tag.info} Shutting down...`);
+      recorder.stop();
+    });
 
     try {
-      await recorder.start()
+      await recorder.start();
     } catch (error) {
-      console.log(`${tag.err} ${error instanceof Error ? error.message : error}`)
-      process.exit(1)
+      console.log(`${tag.err} ${error instanceof Error ? error.message : error}`);
+      process.exit(1);
     }
   },
-})
+});
 
 const main = defineCommand({
-  meta: { name: "bigorec", description: "Download and record Bigo Live streams" },
+  meta: { name: 'bigorec', description: 'Download and record Bigo Live streams' },
   subCommands: { info: infoCmd, download: downloadCmd, record: recordCmd },
-})
+});
 
-runMain(main)
+runMain(main);

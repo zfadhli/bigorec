@@ -3,9 +3,9 @@ pre-commit:
   commands:
     lint:
       glob: "*.{ts,js,mjs,cjs}"
-      run: npx oxlint {staged_files}
+      run: npx biome check --no-errors-on-unmatched --changed --since=HEAD {staged_files}
       stage_fixed: true
     format:
       glob: "*.{ts,js,mjs,cjs,json,md}"
-      run: npx oxfmt --write {staged_files}
+      run: npx biome check --no-errors-on-unmatched --changed --since=HEAD --write {staged_files}
       stage_fixed: true

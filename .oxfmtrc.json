@@ -1,9 +1,0 @@
-{
-  "$schema": "./node_modules/oxfmt/configuration.json",
-  "indentStyle": "space",
-  "indentWidth": 2,
-  "lineWidth": 100,
-  "quoteStyle": "single",
-  "semi": false,
-  "importSorting": true
-}

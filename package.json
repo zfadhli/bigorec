@@ -22,19 +22,18 @@
     "build": "tsdown",
     "dev": "tsdown --watch",
     "typecheck": "tsc --noEmit",
-    "lint": "oxlint src/ bin/",
-    "format": "oxfmt --write src/ bin/",
-    "format:check": "oxfmt --check src/ bin/"
+    "lint": "biome check src/ bin/",
+    "format": "biome check --write src/ bin/",
+    "format:check": "biome check src/ bin/"
   },
   "dependencies": {
     "citty": "^0.1.6",
     "consola": "^3.2.3"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.2",
     "@types/node": "^26.1.0",
     "lefthook": "^2.1.9",
-    "oxfmt": "^0.57.0",
-    "oxlint": "^1.72.0",
     "tsdown": "^0.22.3",
     "typescript": "^5.4.0"
   },
