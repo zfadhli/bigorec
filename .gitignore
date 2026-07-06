@@ -3,3 +3,5 @@ dist/
 recordings/
 *.tsbuildinfo
 .slim/deepwork/
+bigorec.json
+bigorec.jsonc
