@@ -71,9 +71,7 @@ export class CLI {
     })
 
     for (const room of this.config.rooms) {
-      const display = this.manager.getDisplayName(room)
-      const label = display ? `@${display} (${room})` : room
-      container.add(Text({ content: ` ${label.padEnd(24)} Idle` }))
+      container.add(Text({ content: ` ${room.padEnd(24)} Idle` }))
     }
 
     container.add(
@@ -147,8 +145,6 @@ export class CLI {
       const state = statuses.get(room)
       const status = state?.status ?? 'idle'
       const lastError = state?.lastError
-      const displayName = this.manager.getDisplayName(room)
-      const label = displayName ? `@${displayName} (${room})` : room
 
       const color = lastError ? 'red' : (stateColors[status] ?? 'gray')
 
@@ -172,7 +168,7 @@ export class CLI {
         statusText = status
       }
 
-      renderable.content = ` ${label.padEnd(24)}${statusText}`
+      renderable.content = ` ${room.padEnd(24)}${statusText}`
       renderable.fg = color
     }
   }

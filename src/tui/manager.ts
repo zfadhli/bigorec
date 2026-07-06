@@ -1,13 +1,11 @@
 import { Recorder } from '../recorder.js'
 import { parseSiteId } from '../api.js'
-import type { StreamInfo } from '../types.js'
 
 export type AppStatus = 'idle' | 'polling' | 'recording' | 'error'
 
 export interface RoomState {
   status: AppStatus
   lastError?: string
-  displayName?: string
   recordingStart?: number
 }
 
@@ -20,7 +18,6 @@ export interface ManagerConfig {
 export class Manager {
   private recorders = new Map<string, Recorder>()
   private states = new Map<string, RoomState>()
-  private displayNames = new Map<string, string>()
 
   constructor(private config: ManagerConfig) {}
 
@@ -40,8 +37,7 @@ export class Manager {
     })
 
     // Track state from Recorder events
-    recorder.on('live', (info: StreamInfo) => {
-      this.displayNames.set(id, info.nickName)
+    recorder.on('live', () => {
       this.setState(id, { status: 'polling' })
     })
 
@@ -76,7 +72,6 @@ export class Manager {
     recorder.stop()
     this.recorders.delete(id)
     this.states.delete(id)
-    this.displayNames.delete(id)
   }
 
   /** Restart a room: stop then start */
@@ -96,11 +91,6 @@ export class Manager {
   /** Get status snapshot for all rooms */
   getStatuses(): Map<string, RoomState> {
     return new Map(this.states)
-  }
-
-  /** Get display name for a room (from last live event) */
-  getDisplayName(siteId: string): string | undefined {
-    return this.displayNames.get(siteId)
   }
 
   /** Get all active room IDs */
