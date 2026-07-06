@@ -11,7 +11,7 @@ import { saveConfig } from './config.js'
 import type { Manager } from './manager.js'
 import type { AppStatus } from './manager.js'
 
-const VERSION = '0.1.0'
+const VERSION = '0.2.0'
 
 const REFRESH_MS = 2000
 const STARTUP_DELAY = 5000
