@@ -5,7 +5,7 @@
   "license": "MIT",
   "bin": {
     "bigorec": "./dist/bin/bigorec.mjs",
-    "bigorec-tui": "./bin/bigorec-tui.ts"
+    "bigorec-tui": "./bin/bigorec-tui"
   },
   "files": [
     "dist"
@@ -20,10 +20,10 @@
     }
   },
   "scripts": {
-    "build": "tsdown",
+    "build": "tsdown && chmod +x bin/bigorec-tui",
     "dev": "tsdown --watch",
-    "tui": "bun bin/bigorec-tui.ts",
-    "tui:dev": "bun --watch bin/bigorec-tui.ts",
+    "tui": "bun bin/bigorec-tui",
+    "tui:dev": "bun --watch bin/bigorec-tui",
     "typecheck": "tsc --noEmit",
     "lint": "biome check src/ bin/",
     "format": "biome check --write src/ bin/",

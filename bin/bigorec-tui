@@ -1,0 +1,5 @@
+#!/usr/bin/env bun
+
+// Built CLI entry point — runs the bundled output.
+
+await import('../dist/tui/index.mjs')
