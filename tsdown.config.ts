@@ -12,12 +12,4 @@ export default defineConfig([
     format: 'esm',
     platform: 'node',
   },
-  {
-    entry: { 'bin/bigorec-tui': 'bin/bigorec-tui.ts' },
-    format: 'esm',
-    platform: 'node',
-    deps: {
-      neverBundle: ['@opentui/core'],
-    },
-  },
 ])

@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 import { loadConfig } from '../src/tui/config.js'
 import { Manager } from '../src/tui/manager.js'
 import { CLI } from '../src/tui/cli.js'
