@@ -1,0 +1,5 @@
+{
+  "outputDir": "./recordings",
+  "interval": 3,
+  "rooms": ["1106771413"]
+}
