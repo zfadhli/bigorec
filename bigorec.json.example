@@ -1,5 +1,8 @@
 {
+  // Output directory for recorded files
   "outputDir": "./recordings",
+  // Polling interval in minutes (offline: 3min fixed)
   "interval": 3,
+  // Bigo room siteIds to monitor
   "rooms": ["1106771413"]
 }

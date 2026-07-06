@@ -32,7 +32,8 @@
   "dependencies": {
     "@opentui/core": "^0.4.3",
     "citty": "^0.1.6",
-    "consola": "^3.2.3"
+    "consola": "^3.2.3",
+    "tiny-jsonc": "^1.0.2"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.2",
