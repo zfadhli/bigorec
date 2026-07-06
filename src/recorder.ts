@@ -90,7 +90,10 @@ export class Recorder extends EventEmitter {
       });
     } catch (error) {
       if (this.abortController.signal.aborted) return;
-      this.emit('error', error instanceof Error ? error : new Error(String(error)));
+      // 404 = stream ended (m3u8 gone from CDN), not a real error
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes('404')) return;
+      this.emit('error', error instanceof Error ? error : new Error(msg));
     } finally {
       if (durationTimer) clearTimeout(durationTimer);
       this.abortController = null;

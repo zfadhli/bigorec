@@ -1,10 +1,11 @@
 {
   "name": "bigorec",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Download and record Bigo Live streams",
   "license": "MIT",
   "bin": {
-    "bigorec": "./dist/bin/bigorec.mjs"
+    "bigorec": "./dist/bin/bigorec.mjs",
+    "bigorec-tui": "./bin/bigorec-tui"
   },
   "files": [
     "dist"
@@ -19,16 +20,20 @@
     }
   },
   "scripts": {
-    "build": "tsdown",
+    "build": "tsdown && chmod +x bin/bigorec-tui",
     "dev": "tsdown --watch",
+    "tui": "bun bin/bigorec-tui",
+    "tui:dev": "bun --watch bin/bigorec-tui",
     "typecheck": "tsc --noEmit",
     "lint": "biome check src/ bin/",
     "format": "biome check --write src/ bin/",
     "format:check": "biome check src/ bin/"
   },
   "dependencies": {
+    "@opentui/core": "^0.4.3",
     "citty": "^0.1.6",
-    "consola": "^3.2.3"
+    "consola": "^3.2.3",
+    "tiny-jsonc": "^1.0.2"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.2",
