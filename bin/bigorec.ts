@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { statSync } from 'node:fs';
 import { defineCommand, runMain } from 'citty';
-import { downloadHls, getStreamInfo, parseSiteId, Recorder, BigorecError } from '../src/index.js';
-import { tmuxStart, tmuxStop, tmuxStatus } from '../src/tmux.js';
+import { BigorecError, downloadHls, getStreamInfo, parseSiteId, Recorder } from '../src/index.js';
+import { tmuxStart, tmuxStatus, tmuxStop } from '../src/tmux.js';
 
 // Tokrec-style colored tags
 const tag = {
@@ -52,7 +52,6 @@ const downloadCmd = defineCommand({
   args: {
     url: { type: 'positional', description: 'Bigo room URL or siteId', required: true },
     output: { type: 'string', description: 'Output file path', alias: 'o' },
-    concurrency: { type: 'string', description: 'Download concurrency', alias: 'c', default: '4' },
   },
   async run({ args }) {
     const siteId = parseSiteId(args.url);
@@ -67,7 +66,6 @@ const downloadCmd = defineCommand({
     const start = Date.now();
     const outputPath = await downloadHls(stream.hlsSrc, {
       output: args.output,
-      concurrency: parseInt(args.concurrency, 10),
     });
     const elapsed = (Date.now() - start) / 1000;
     const { size } = statSync(outputPath);
@@ -102,7 +100,9 @@ const recordCmd = defineCommand({
   async run({ args }) {
     const pollInterval = parseInt(args.pollInterval, 10);
     const offlineInterval = 3 * 60; // matches recorder's offline interval
-    console.log(`${tag.info} Polling every ${offlineInterval / 60}min (offline) / ${pollInterval}s (live)`);
+    console.log(
+      `${tag.info} Polling every ${offlineInterval / 60}min (offline) / ${pollInterval}s (live)`,
+    );
 
     const recorder = new Recorder(args.url, {
       output: args.output,
@@ -177,13 +177,31 @@ const recordCmd = defineCommand({
 });
 
 const startCmd = defineCommand({
-  meta: { name: 'start', description: 'Start recording in a tmux session (survives terminal close)' },
+  meta: {
+    name: 'start',
+    description: 'Start recording in a tmux session (survives terminal close)',
+  },
   args: {
     url: { type: 'positional', description: 'Bigo room URL or siteId', required: true },
     output: { type: 'string', description: 'Output file path', alias: 'o' },
-    outputDir: { type: 'string', description: 'Output directory', alias: 'd', default: './recordings' },
-    pollInterval: { type: 'string', description: 'Poll interval when live (seconds)', alias: 'p', default: '30' },
-    maxDuration: { type: 'string', description: 'Max duration (seconds, 0=unlimited)', alias: 'm', default: '0' },
+    outputDir: {
+      type: 'string',
+      description: 'Output directory',
+      alias: 'd',
+      default: './recordings',
+    },
+    pollInterval: {
+      type: 'string',
+      description: 'Poll interval when live (seconds)',
+      alias: 'p',
+      default: '30',
+    },
+    maxDuration: {
+      type: 'string',
+      description: 'Max duration (seconds, 0=unlimited)',
+      alias: 'm',
+      default: '0',
+    },
   },
   run({ args }) {
     const siteId = parseSiteId(args.url);
@@ -244,7 +262,14 @@ const statusCmd = defineCommand({
 
 const main = defineCommand({
   meta: { name: 'bigorec', description: 'Download and record Bigo Live streams' },
-  subCommands: { info: infoCmd, download: downloadCmd, record: recordCmd, start: startCmd, stop: stopCmd, status: statusCmd },
+  subCommands: {
+    info: infoCmd,
+    download: downloadCmd,
+    record: recordCmd,
+    start: startCmd,
+    stop: stopCmd,
+    status: statusCmd,
+  },
 });
 
 runMain(main);
