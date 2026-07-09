@@ -1,6 +1,6 @@
 {
   "name": "bigorec",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Download and record Bigo Live streams",
   "license": "MIT",
   "bin": {
@@ -33,6 +33,7 @@
     "@opentui/core": "^0.4.3",
     "citty": "^0.1.6",
     "consola": "^3.2.3",
+    "nano-spawn": "^2.1.0",
     "tiny-jsonc": "^1.0.2"
   },
   "devDependencies": {

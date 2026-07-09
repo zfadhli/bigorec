@@ -43,3 +43,10 @@ export class TmuxError extends BigorecError {
     this.name = 'TmuxError';
   }
 }
+
+export class FfmpegError extends BigorecError {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = 'FfmpegError';
+  }
+}

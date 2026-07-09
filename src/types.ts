@@ -14,10 +14,6 @@ export interface StreamInfo {
 export interface DownloadOptions {
   /** Output file path (default: {siteId}_{timestamp}.ts) */
   output?: string;
-  /** Segment download concurrency (default: 4) */
-  concurrency?: number;
-  /** Request timeout in ms (default: 30000) */
-  timeout?: number;
 }
 
 export interface RecordOptions extends DownloadOptions {
@@ -29,12 +25,15 @@ export interface RecordOptions extends DownloadOptions {
   outputDir?: string;
   /** Auto-split recording every N seconds (0 = no split) */
   splitEvery?: number;
+  /** Remux .ts to .mp4 after recording (default: true) */
+  remux?: boolean;
 }
 
 export interface RecorderEvents {
   live: (info: StreamInfo) => void;
   offline: () => void;
   recording: (path: string) => void;
+  remuxed: (path: string) => void;
   error: (err: Error) => void;
   progress: (bytes: number) => void;
 }

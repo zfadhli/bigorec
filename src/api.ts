@@ -1,5 +1,5 @@
-import type { StreamInfo } from './types.js';
 import { ApiError, UserNotFoundError } from './errors.js';
+import type { StreamInfo } from './types.js';
 
 const API_URL = 'https://ta.bigo.tv/official_website/studio/getInternalStudioInfo';
 

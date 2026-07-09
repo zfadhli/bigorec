@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-07-09
+
+### Added
+- ffmpeg integration for HLS stream download (replaces native HTTP segment download)
+- Auto-remux `.ts` to `.mp4` after recording completes or is stopped
+- `remux` option in `RecordOptions` (default: true)
+- `remuxed` event emitted when remux completes
+- `FfmpegError` and `FfmpegNotAvailableError` error classes
+- Exported `downloadHlsWithFfmpeg`, `remuxToMp4`, `checkFfmpeg` utilities
+
+### Changed
+- Replace native HTTP HLS download with ffmpeg subprocess (`nano-spawn`)
+- Simplified `src/hls.ts` from 167 to 32 lines
+- Removed `concurrency` option from `DownloadOptions` (ffmpeg handles internally)
+
 ## [0.2.0] - 2026-07-07
 
 ### Added

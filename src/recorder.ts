@@ -1,13 +1,14 @@
 import { EventEmitter } from 'node:events';
 import { join } from 'node:path';
 import { getStreamInfo, parseSiteId } from './api.js';
-import { downloadLiveHls } from './hls.js';
 import { StreamNotFoundError } from './errors.js';
+import { remuxToMp4 } from './ffmpeg.js';
+import { downloadLiveHls } from './hls.js';
 import type { RecordOptions, StreamInfo } from './types.js';
 
 export class Recorder extends EventEmitter {
   private siteId: string;
-  private options: Required<RecordOptions>;
+  private options: Required<Omit<RecordOptions, 'remux'>> & { remux: boolean };
   private abortController: AbortController | null = null;
   private stopController: AbortController | null = null;
   private polling = false;
@@ -21,8 +22,7 @@ export class Recorder extends EventEmitter {
       outputDir: options.outputDir ?? './recordings',
       splitEvery: options.splitEvery ?? 0,
       output: options.output ?? '',
-      concurrency: options.concurrency ?? 4,
-      timeout: options.timeout ?? 30_000,
+      remux: options.remux ?? true,
     };
   }
 
@@ -83,10 +83,7 @@ export class Recorder extends EventEmitter {
     try {
       const hlsSrc = info.hlsSrc!;
       await downloadLiveHls(hlsSrc, outputPath, {
-        concurrency: this.options.concurrency,
-        timeout: this.options.timeout,
         signal: this.abortController.signal,
-        onSegment: (count) => this.emit('progress', count),
       });
     } catch (error) {
       if (this.abortController.signal.aborted) return;
@@ -97,6 +94,16 @@ export class Recorder extends EventEmitter {
     } finally {
       if (durationTimer) clearTimeout(durationTimer);
       this.abortController = null;
+
+      // Remux to mp4 after recording stops
+      if (this.options.remux && outputPath.endsWith('.ts')) {
+        try {
+          const mp4Path = await remuxToMp4(outputPath);
+          this.emit('remuxed', mp4Path);
+        } catch (error) {
+          this.emit('error', error instanceof Error ? error : new Error(String(error)));
+        }
+      }
     }
   }
 }
@@ -129,10 +136,12 @@ export async function recordOnce(input: string, options: RecordOptions = {}): Pr
   const filename = options.output || defaultFilename(siteId);
   const outputPath = join(options.outputDir ?? './recordings', filename);
 
-  await downloadLiveHls(info.hlsSrc, outputPath, {
-    concurrency: options.concurrency ?? 4,
-    timeout: options.timeout ?? 30_000,
-  });
+  await downloadLiveHls(info.hlsSrc, outputPath);
+
+  // Remux to mp4 after recording
+  if (options.remux !== false && outputPath.endsWith('.ts')) {
+    await remuxToMp4(outputPath);
+  }
 
   return outputPath;
 }
